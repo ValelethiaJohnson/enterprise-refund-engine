@@ -1,0 +1,42 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REVERSED
+  DISPUTED
+}
+
+enum RefundType {
+  FULL
+  PARTIAL
+}
+
+model RefundInstruction {
+  id                    String       @id @default(uuid())
+  refundId              String       @unique
+  originalTransactionId String
+  ledgerId              String
+  amount                Int          // Stored in minor units (cents)
+  currency              String       // ISO 4217 code (e.g., USD)
+  status                RefundStatus @default(PENDING)
+  type                  RefundType
+  reason                String
+  idempotencyKey        String       @unique
+  metadata              Json?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  @@index([originalTransactionId])
+  @@index([ledgerId])
+  @@index([status])
+}
